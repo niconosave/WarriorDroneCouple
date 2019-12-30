@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<title>RPGWarriorCouple</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<script src="MainCastellano/MobileSupport.js"></script>
+<script src="MainCastellano/Main.js"></script>
+<script src="MainCastellano/Intro.js"></script>
+<body>
+	<p id="t">ñÑ</p>
+	<script>document.getElementById("t").parentNode.removeChild(document.getElementById("t"));</script>
+	<div id="hiddenImages">
+	<img src="rsc/asemble_001.gif"></img><img src="rsc/asemble_002.gif"></img><img src="rsc/asemble_003.gif"></img><img src="rsc/asemble_004.gif"></img>
+	</div>
+	<div id="topDiv"></div>
+	<script>
+		if(!isMobile()){
+			document.write('<table style="width:100%">');
+			document.write('<tr><th style="width:60%">');
+		}/*else {
+			document.write('<div style="width:60%;padding-left:20%;padding-right:20%">');
+		}*/
+		document.write('<div id="statsDiv"></div>');
+		document.write('<div id="mainDiv"><img id="leftImg"><img id="mainImg"><img id="rightImg" class="flipped"></img></div>');
+		if(!isMobile()){
+			document.write('</th>');
+			document.write('<th>');
+		}else {
+			//document.write('</div>');
+			document.write('<div id="textDiv"></div>');
+		}
+		document.write('<div id="buttonDiv"></div>');
+		if(!isMobile()){
+			document.write('</th>');
+			document.write('</tr>');
+			document.write('<tr>');
+			document.write('<th>');
+			document.write('<div id="textDiv"></div>');
+			document.write('</th>');
+			document.write('<th>');
+			document.write('</th>');
+			document.write('</tr>');
+			document.write('</table>');
+		}
+	</script>
+	<div id="bottomDiv"></div>
+	<br>
+	<br>
+</body>
+<script>
+init();
+</script>
+</html>

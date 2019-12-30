@@ -1,0 +1,109 @@
+body{
+	background-color:black;
+	border:100px;
+	color:white;
+	font-weight: bold;
+	font-family: Arial,"Serif";
+	text-align: center;
+}
+button{
+	font-family: inherit;
+	
+	font-size: 0.85em;
+	color:black;
+	border-radius: 5px;
+	border: 0px;
+	padding:0.3em;
+	box-shadow: 0px 5px #4f2400;
+	margin:5px;
+	width:98%;
+	background-color: #ff7700;
+}
+button:active{
+	background-color:#4f2400;
+	box-shadow: 0px 0px 0px 0px black;
+	transform: translateY(5px);
+}
+button::-moz-focus-inner {
+  border: 0;
+}
+button:active:disabled{
+	background-color:grey;
+	box-shadow: 0px 5px #333333;
+	transform: translateY(0px);
+}
+button:disabled{
+	background-color:grey;
+	box-shadow: 0px 5px #333333;
+}
+h1{
+	background-color:black;
+	color:white;
+}
+img.flipped{
+	-moz-transform: scaleX(-1);
+	-o-transform: scaleX(-1);
+	-webkit-transform: scaleX(-1);
+	transform: scaleX(-1);
+	filter: FlipH;
+	-ms-filter: "FlipH";
+}
+table.characterStats{
+	border-radius: 10px;
+	border-style: solid;
+	border-color: red;
+	background-color: black;
+	color: red;
+}
+div.danger{
+	content:DANGER;
+	color:white;
+	background-color:red;
+	font-size:180%;
+	letter-spacing:2em;
+}
+p.status{
+	color:yellow;
+}
+.WHITE{
+	color:white;
+}
+span.blackOutline{
+	text-shadow: 2px 0 0 #000, -2px 0 0 #000, 0 2px 0 #000, 0 -2px 0 #000, 1px 1px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+}
+.PURPLE{
+	color:purple;
+}
+.BLUE{
+	color:blue;
+}
+.RED{
+	color:red;
+}
+#hiddenImages {
+    display: none
+}
+#messageDiv{
+	color:yellow;
+}
+/*#textDiv{
+	min-height: 12em;
+}*/
+#leftImg{
+	/*float:left;*/
+	width:32%;
+}
+#mainImg{
+	width:32%;
+}
+#rightImg{
+	/*float:right;*/
+	width:32%;
+}
+#mainDiv{
+	min-height:10em;
+	text-align:center;
+}
+#statsDiv{
+	min-height:3em;
+}
