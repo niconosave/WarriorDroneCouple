@@ -6,9 +6,11 @@ class Intro{
 	}
 	
 	init(){
-		this.write("reporte: falla de hardware");
-		this.write("posible causa: sabotage");
-		this.addButton("btn0","RESPUESTA: ENVIAR DRONES DE ATAQUES");
+		this.write("SUPER WARRIOR DRONE BATTLE COUPLE");
+		this.write("este es un juego experimental rpg con mecanicas de cooperacion y toma de riesgo");
+		this.write("las mecanicas normales del rpg son faciles de entender, pero muy aburridas, no presentan muchas decisciones interesantes");
+		this.write("y no tienden mucho al drama. ademas resulta una idea interesante explorar la cooperacion y dependencia entre los party memebers");
+		this.addButton("START","EMPEZAR EL JUEGO");
 	}
 	
 	write(contenido){
@@ -43,6 +45,49 @@ class Intro{
 		
 		window.main.removeButtons();
 		switch(e.currentTarget.id){
+			case "START":
+				window.main.preLoadImage("rsc/story01_002.gif");
+				window.main.cleanText();
+				window.main.drawImage("rsc/story01_001.gif");
+				window.main.write("en el futuro distante post-numerico la humanidad es verdaderamente libre");
+				window.main.write("abandonando las restricciones de la inteligencia, la ciencia, el criterio, el progreso y la buena voluntad hacia el projimo");
+				window.main.write("a logrado expandir su conciencia hacia el universo interior de la post-realidad");
+				window.main.write("en verdad, es el mas oscuro momento para la humanidad");
+				window.main.intro.addButton("btnPre0","CONTINUAR");
+				break;
+			case "btnPre0":
+				window.main.preLoadImage("rsc/story01_003.gif");
+				window.main.cleanText();
+				window.main.drawImage("rsc/story01_002.gif");
+				window.main.write("en un movimiento verdaderamente atrevido la humanidad abraza el post-marxismo comunismo");
+				window.main.write("lo que marx no supo ver es que sin la plusvalia y la explotacion de los trabajadores");
+				window.main.write("la sociedad no podra alcanzar un suficiente estado de opresion para alcanzar el verdadero comunismo");
+				window.main.write("los post-marxistas comunistas han trascendido la verdadad mismas y abrazado las posibilidades radicales de la irrealidad");
+				window.main.intro.addButton("btnPre01","CONTINUAR");
+				break;
+			case "btnPre01":
+				window.main.preLoadImage("rsc/story01_004.gif");
+				window.main.cleanText();
+				window.main.drawImage("rsc/story01_003.gif");
+				window.main.write("Marte es la Meca post-marxista donde los jovenes revolucionarios peregrinan para abandonan la opresion burgesa de una familia amorosa");
+				window.main.write("y participar en la explotacion de la clase trabajadora. En este lugar se encuentra la 'Gran Fabrica de los trabajadores' donde la sagrada explotacion es exraida");
+				window.main.write("de la clase trabajadora manufacturada, producida en ese mismo lugar. Esta vez el comunismo verdadero esta a la vuelta de la esquina");
+				window.main.intro.addButton("btnPre02","CONTINUAR");
+				break;
+			case "btnPre02":
+				window.main.cleanText();
+				window.main.drawImage("rsc/story01_004.gif");
+				window.main.write("la gran expancion industrial de la fabrica es de tal tamaño que sociedades enteras viven entre sus rendijas");
+				window.main.write("grupos de sucios recolectores de basura, facistas y contra-revolucionarios amenazan la integridad de La Gran Fabrica");
+				window.main.write("para contrarrestar estas acciones politicas, se despachan drones trabajadores especiales adaptados para el combate");
+				window.main.intro.addButton("btnPre03","CONTINUAR");
+				break;
+			case "btnPre03":
+				window.main.cleanText();
+				window.main.write("reporte: falla de hardware");
+				window.main.write("posible causa: sabotage");
+				window.main.intro.addButton("btn0","RESPUESTA: ENVIAR DRONES DE ATAQUES");
+				break;
 			case "btn0":
 				window.main.preLoadImage("rsc/asemble_005.gif");
 				window.main.cleanText();

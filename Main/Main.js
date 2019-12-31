@@ -1,57 +1,53 @@
 class Main{
 	constructor(){
-		if(localStorage.firstTime=="1" || localStorage.firstTime==undefined)this.intro=new Intro();
-		else {
-			this.name=localStorage.playerName;
+		if(localStorage.firstTime=="1" || localStorage.firstTime==undefined){
+			this.intro=new Intro();
+		}else {
+			this.setNamePlayer(localStorage.playerName);
 			this.setNamePartner(localStorage.partnerName);
 			this.init();
+			this.campaignProgress=localStorage.campaignProgress;
+			this.switchedPartner=localStorage.switchedPartner=="true";
+			this.camping=localStorage.camping=="true";
+			this.resetBattle();
 		}
 	}
 	
 	init(){
 		end=false;
 		fled=false;
-		this.threat=1;
-		this.stamina=10;
-		this.stamina_max=10;
-		this.wounded=false;
-		this.defended=false;
-		this.bait=false;
-		this.bait_count=0;
-		this.enemy=this.createCharacter("enemy",11);
-		this.enemy2=this.createCharacter("enemy2",18);
+		this.campaignProgress=0;
+		this.switchedPartner=false;
+		this.camping=false;
+		this.campaignGoal=10;
+		this.enemy=this.createCharacter("enemy",1);
+		this.enemy2=this.createCharacter("enemy2",1);
 		this.partner=this.createCharacter(this.partnerName,10);
+		this.myself=this.createCharacter(this.name,10);
 		this.partner.order=null;
-		this.target=this.enemy2;
-		this.sideTarget=this.enemy;
-		this.setFocus(this.enemy,this.partner,this);
-		this.setFocus(this.enemy2,this,this.partner);
+		this.setFocus(this.enemy,this.partner,this.myself);
+		this.setFocus(this.enemy2,this.myself,this.partner);
 		this.setFocus(this.partner,this.enemy,this.enemy2);
-		this.adrenaline=false;
+		this.setFocus(this.myself,this.enemy2,this.enemy);
+		this.myself.adrenaline=false;
 		this.queueIndex=0;
 		if(Math.random()>0.45)this.think=this.enemyLogicA;
 		else this.think=this.enemyLogicB;
 		this.turn=1;
-		this.drawLeftImage("rsc/partner_back.gif");
+		var leftString=this.switchedPartner ? "rsc/partner_back.gif" : "rsc/default_enemy_idle.gif";
+		var rightString=this.switchedPartner ? "rsc/default_enemy_idle.gif" : "rsc/partner_back.gif";
+		this.drawLeftImage(leftString);
 		this.drawImage("rsc/default_enemy_idle.gif");
-		this.drawRightImage("rsc/default_enemy_idle.gif");
-		this.addButton("btnWaitDescription","WAIT A MOMENT");
-		this.addButton("btnAttackDescription","ATTACK");
-		this.addButton("btnBaitDescription","BAIT AN ATTACK");
-		this.addButton("btnFlankDescription","FLANK");
-		this.addButton("btnChangeFocusDescription","CHANGE FOCUS");
-		this.addButton("btnLook","LOOK AT PARTNER");
-		this.addButton("btnRestart","RESTART");
-		this.writeStats();
+		this.drawRightImage(rightString);
+		this.addMainBattleButtons();
 		window.onkeypress = this.keyPress;
-		this.saveData();
 	}
 	
 	resetBattle(){
-		this.hideDangerText();
 		fled=false;
-		this.enemy=this.createCharacter("enemy",11);
-		this.enemy2=this.createCharacter("enemy2",18);
+		end=false;
+		this.enemy=this.createCharacter("enemy",1);
+		this.enemy2=this.createCharacter("enemy2",1);
 		this.partner.stamina=this.partner.stamina_max;
 		this.partner.defended=false;
 		this.partner.wounded=false;
@@ -60,36 +56,38 @@ class Main{
 		this.partner.bait_count=0;
 		this.partner.flanker=null;
 		this.partner.order=null;
-		this.threat=1;
-		this.stamina=10;
-		this.stamina_max=10;
-		this.wounded=false;
-		this.defended=false;
-		this.bait=false;
-		this.bait_count=0;
-		this.target=this.enemy2;
-		this.sideTarget=this.enemy;
-		this.setFocus(this.enemy,this.partner,this);
-		this.setFocus(this.enemy2,this,this.partner);
+		this.myself.threat=1;
+		this.myself.stamina=this.myself.stamina_max;
+		this.myself.wounded=false;
+		this.myself.defended=false;
+		this.myself.bait=false;
+		this.myself.bait_count=0;
+		this.myself.adrenaline=false;
+		this.setFocus(this.enemy,this.partner,this.myself);
+		this.setFocus(this.enemy2,this.myself,this.partner);
 		this.setFocus(this.partner,this.enemy,this.enemy2);
+		this.setFocus(this.myself,this.enemy2,this.enemy);
 		this.queueIndex=0;
-		this.adrenaline=false;
 		if(Math.random()>0.45)this.think=this.enemyLogicA;
 		else this.think=this.enemyLogicB;
 		document.getElementById("mainImg").style.width="32%";
 		this.turn=1;
 		this.hideDangerText();
-		this.drawLeftImage("rsc/partner_back.gif");
-		this.drawImage("rsc/default_enemy_idle.gif");
-		this.drawRightImage("rsc/default_enemy_idle.gif");
-		this.addButton("btnWaitDescription","WAIT A MOMENT");
-		this.addButton("btnAttackDescription","ATTACK");
-		this.addButton("btnBaitDescription","BAIT AN ATTACK");
-		this.addButton("btnFlankDescription","FLANK");
-		this.addButton("btnChangeFocusDescription","CHANGE FOCUS");
-		this.addButton("btnLook","LOOK AT PARTNER");
-		this.writeStats();
+		if(this.camping){
+			this.removeButtons();
+			this.hideStats();
+			this.drawLeftImage();
+			this.drawImage();
+			this.drawRightImage();
+			this.addButton("btnCamp","START");
+		}else {
+			this.drawBattleScene();
+			this.addMainBattleButtons();
+			this.addButton("btnRestart","RESTART");
+		}
 	}
+
+	
 	
 	setNamePlayer(name){
 		this.name=name;
@@ -121,8 +119,11 @@ class Main{
 	saveData(){
 		if (typeof(Storage) !== "undefined") {
 			localStorage.setItem("firstTime", 0);
-			localStorage.setItem("playerName", this.name);
+			localStorage.setItem("playerName", this.myself.name);
 			localStorage.setItem("partnerName", this.partner.name);
+			localStorage.setItem("campaignProgress", this.campaignProgress);
+			localStorage.setItem("switchedPartner", this.switchedPartner);
+			localStorage.setItem("camping", this.camping);
 		}
 	}
 	
@@ -131,6 +132,9 @@ class Main{
 			localStorage.removeItem("firstTime");
 			localStorage.removeItem("playerName");
 			localStorage.removeItem("partnerName");
+			localStorage.removeItem("campaignProgress");
+			localStorage.removeItem("switchedPartner");
+			localStorage.removeItem("camping");
 		}
 	}
 	
@@ -145,11 +149,11 @@ class Main{
 			switch(this.queueIndex){
 				case 0:
 					this.think(this.enemy);
-					if(this.adrenaline)this.setPanicText();
-					else if(this.stamina<4)this.setDangerText();
+					if(this.myself.adrenaline)this.setPanicText();
+					else if(this.myself.stamina<4)this.setDangerText();
 					else this.hideDangerText();
 					this.checkDefeat();
-					if((this.partner.wounded || this.wounded) && this.adrenaline==false){
+					if((this.partner.wounded || this.myself.wounded) && this.myself.adrenaline==false){
 						this.queueIndex=3;
 						return false;
 					}
@@ -157,25 +161,25 @@ class Main{
 					return false;
 				break;
 				case 1:
-					if(this.wounded)this.partner.threat++;
-					this.defended=false;
-					this.allyLogic(this.partner,this);
+					if(this.myself.wounded)this.partner.threat++;
+					this.myself.defended=false;
+					this.allyLogic(this.partner,this.myself) ;
 					this.checkDefeat();
 					this.queueIndex=2;
 					return false;
 				break;
 				case 2:
 					this.think(this.enemy2);
-					if(this.adrenaline)this.setPanicText();
-					else if(this.stamina<4)this.setDangerText();
+					if(this.myself.adrenaline)this.setPanicText();
+					else if(this.myself.stamina<4)this.setDangerText();
 					else this.hideDangerText();
 					this.checkDefeat();
 					this.partner.defended=false;
-					if((this.partner.wounded || this.wounded) && this.adrenaline==false){
+					if((this.partner.wounded || this.myself.wounded) && this.myself.adrenaline==false){
 						this.queueIndex=4;
 						return false;
 					}
-					if(this.partner.wounded)this.threat++;
+					if(this.partner.wounded)this.myself.threat++;
 					this.turn++;
 					this.queueIndex=0;
 					return true;
@@ -183,17 +187,17 @@ class Main{
 				case 4://partner true
 					this.setPanicText();
 					if(this.partner.wounded){
-						this.drawImage("rsc/partner_down.gif");
+						this.drawImage("rsc/partner_down.gif",window.main.switchedPartner);
 						this.cleanText();
-						this.threat+=4;
+						this.myself.threat+=4;
 						this.write(this.partner.name+" is not moving!!!!");
 					}else {
-						this.drawImage("rsc/partner_panic.gif");
+						this.drawImage("rsc/partner_panic.gif",window.main.switchedPartner);
 						this.cleanText();
 						this.partner.threat+=4;
 						this.write("<span class='blue'>no</span>");
 					}
-					this.adrenaline=true;
+					this.myself.adrenaline=true;
 					this.turn++;
 					if(this.queueIndex==4){
 						this.queueIndex=0;
@@ -297,20 +301,20 @@ class Main{
 			this.drawPartnerImage();
 		}else if(Math.random()>0.4 && who.stamina-2>ally.stamina && who.stamina>0 && ally.wounded==false){
 			this.write("<span class='blue'>hang in there budy!</span>");
-			this.drawImage("rsc/partner_looking.gif");
+			this.drawImage("rsc/partner_looking.gif",window.main.switchedPartner);
 			this.encourage(who,ally);
 		}else if(ally.target==who.target && ally.threat>2 && ally.target.bait_count>0){
 			var r=this.attack(who,who.target);
-			if(r)this.drawImage("rsc/partner_attack_ok.gif");
+			if(r)this.drawImage("rsc/partner_attack_ok.gif",window.main.switchedPartner);
 			else this.drawImage("rsc/default_fail.gif");
 			this.write("<span class='blue'> attack now! his guard is down</span>");
 		}else{
 			if(this.turn%3==0){
 				var r=this.attack(who,who.target);
-				if(r)this.drawImage("rsc/partner_attack_ok.gif");
+				if(r)this.drawImage("rsc/partner_attack_ok.gif",window.main.switchedPartner);
 				else this.drawImage("rsc/default_fail.gif");
 			}else {
-				this.drawImage("rsc/partner_back.gif");
+				this.drawImage("rsc/partner_back.gif",window.main.switchedPartner);
 				this.wait(who);
 			}
 		} 
@@ -330,14 +334,20 @@ class Main{
 			this.drawImage("");
 			this.drawLeftImage("");
 			this.drawRightImage("");
-			this.write("<h1>YOU WIN!!!</h1>GAME OVER<br>this screen is under construction");
-			this.addButton("BtnVictory","RESTART");
+			this.campaignProgress++;
+			if(this.campaignProgress<this.campaignGoal){
+				this.write("<h1>YOU WIN THE BATTLE</h1>the enemy is defetead but there are more of them around<br> you are "+(this.campaignGoal-this.campaignProgress)+" steps away from your goal <br> take a moment to rest before going fodward");
+				this.addButton("btnCamp","REST");
+			}else {
+				this.write("<h1>YOU WIN THE GAME!!!</h1>GAME OVER<br>this screen is under construction");
+				this.addButton("bntVictory","RESTART");
+			}
 			return true;
 		}else return false;
 	}
 	
 	checkDefeat(){
-		if(this.wounded && this.partner.wounded){
+		if(this.myself.wounded && this.partner.wounded){
 			end=true;
 			this.removeButtons();
 			this.cleanText();
@@ -347,7 +357,7 @@ class Main{
 			this.drawLeftImage("");
 			this.drawRightImage("");
 			this.write("<h1>YOU LOST</h1>GAME OVER<br>this screen is under construction");
-			this.addButton("BtnDefeat","RESTART");
+			this.addButton("bntDefeat","RESTART");
 			this.resetSaveData();
 			return true;
 		}else return false;
@@ -360,20 +370,23 @@ class Main{
 		this.hideStats();
 		this.hideDangerText();
 		this.write(who.name+" carried "+toWhom.name+" away from the battle!");
+		this.write(who.name+" hides in a dark forgotten corner of the factory");
+		this.write("you have lost your progress!");
+		this.campaignProgress=0;
 		if(isMobile())document.getElementById("mainImg").style.width="60%";
 		else document.getElementById("mainImg").style.width="40%";
-		if(who==this){
+		if(who==this.myself) {
 			this.hideDangerText();
 			this.drawLeftImage();
 			this.drawRightImage();
-			this.drawImage("rsc/partner_injured.gif");
+			this.drawImage("rsc/partner_injured.gif",window.main.switchedPartner);
 			this.addButton("btnRest","WAIT UNTIL "+toWhom.name+"'S WOUNDS ARE HEALED");
 		}
 		else {
 			this.hideDangerText();
 			this.drawLeftImage();
 			this.drawRightImage();
-			this.drawImage("rsc/partner_save.gif");
+			this.drawImage("rsc/partner_save.gif",window.main.switchedPartner);
 			this.write("<span class='blue'>you try and rest. I will keep watch until you are feeling better</span>");
 			this.addButton("btnWaitRest","SLEEP");
 		}
@@ -387,8 +400,11 @@ class Main{
 	//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$                    $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 	//$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 	
-	drawImage(imageName){
-		if(imageName==undefined){
+	drawImage(imageName,flipped){
+		if(flipped){
+			this.drawRightImage(imageName);
+			this.drawImage("");
+		}else if(imageName==undefined){
 			document.getElementById("mainImg").style.display='none';
 		}else{
 			document.getElementById("mainImg").style.display='initial';
@@ -416,12 +432,25 @@ class Main{
 	
 	drawPartnerImage(){
 		if(this.partner.stamina<this.partner.stamina_max/3){
-			this.drawImage("rsc/partner_very_tired.gif");
+			this.drawImage("rsc/partner_very_tired.gif",this.switchedPartner);
 		}else if(this.partner.stamina<(this.partner.stamina_max/3)*2){
-			this.drawImage("rsc/partner_tired.gif");
+			this.drawImage("rsc/partner_tired.gif",this.switchedPartner);
 		}else {
-			this.drawImage("rsc/partner_healthy.gif");
+			this.drawImage("rsc/partner_healthy.gif",this.switchedPartner);
 		}
+	}
+
+	drawBattleScene(){
+		var leftString=window.main.switchedPartner ? "rsc/partner_back.gif" : "rsc/default_enemy_idle.gif";
+		var rightString=window.main.switchedPartner ? "rsc/default_enemy_idle.gif" : "rsc/partner_back.gif";
+		var leftWound=window.main.switchedPartner ? window.main.partner.wounded : window.main.enemy2.wounded;
+		var RightWound=window.main.switchedPartner ? window.main.enemy2.wounded : window.main.partner.wounded;
+		if(!leftWound)window.main.drawLeftImage(leftString);
+		else window.main.drawLeftImage();
+		if(!window.main.enemy.wounded)window.main.drawImage("rsc/default_enemy_idle.gif");
+		else window.main.drawImage();
+		if(!RightWound)window.main.drawRightImage(rightString);
+		else window.main.drawRightImage();
 	}
 	
 	preLoadImage(imageName){
@@ -554,10 +583,10 @@ class Main{
 	}
 	
 	writeStats(){
-		var s=this.name;
-		if(this.stamina>0)s+=",stamina:"+this.stamina;
+		var s=this.myself.name;
+		if(this.myself.stamina>0)s+=",stamina:"+this.myself.stamina;
 		else s+=" is badly hurt";
-		s+=",threat:"+this.threat+",baits:"+this.bait_count+"<br>";
+		s+=",threat:"+this.myself.threat+",baits:"+this.myself.bait_count+"<br>";
 		/*s+=this.partner.name;
 		if(this.partner.stamina>0)s+=",stamina:"+this.partner.stamina;
 		else s+=" is badly hurt";
@@ -666,6 +695,17 @@ class Main{
 	removeButtons(){
 		document.getElementById("buttonDiv").innerHTML="";
 	}
+
+	addMainBattleButtons(){
+		this.removeButtons();
+		this.addButton("btnWaitDescription","WAIT A MOMENT");
+		this.addButton("btnAttackDescription","ATTACK");
+		this.addButton("btnBaitDescription","BAIT AN ATTACK");
+		this.addButton("btnFlankDescription","FLANK");
+		this.addButton("btnChangeFocusDescription","CHANGE FOCUS");
+		this.addButton("btnLook","LOOK AT PARTNER");		
+		this.writeStats();
+	}
 	
 	buttonClick(e){
 		window.main.cleanText();
@@ -690,7 +730,7 @@ class Main{
 				window.main.write("if you counter succesfully then the opponent loses 3 stamina and you lose 1");
 				window.main.addButton("btnBait","BAIT AN ATTACK");
 				window.main.addButton("btnNevermind","NEVERMIND");
-				if(window.main.bait_count>0)window.main.enableButton("btnBait");
+				if(window.main.myself.bait_count>0)window.main.enableButton("btnBait");
 				else window.main.disableButton("btnBait");
 			break;
 			case "btnFlankDescription":
@@ -701,12 +741,12 @@ class Main{
 				window.main.write("your threat level will be 1");
 				window.main.addButton("btnFlank","SURROUND OPPONENT");
 				window.main.addButton("btnNevermind","NEVERMIND");
-				if(window.main.enemy.flanker==window.main || window.main.threat<3)window.main.disableButton("btnFlank");
+				if(window.main.enemy.flanker==window.main.myself || window.main.myself.threat<3)window.main.disableButton("btnFlank");
 				else window.main.enableButton("btnFlank");
 			break;
 			case "btnChangeFocusDescription":
 				window.main.removeButtons();
-				window.main.write("stop focusing on "+window.main.target.name+" to start fighting "+window.main.sideTarget.name+"<br> but lose one turn");
+				window.main.write("stop focusing on "+window.main.myself.target.name+" to start fighting "+window.main.myself.sideTarget.name+"<br> but lose one turn");
 				window.main.addButton("btnChangeFocus","CHANGE FOCUS");
 				window.main.addButton("btnNevermind","NEVERMIND");
 			break;
@@ -734,7 +774,7 @@ class Main{
 				window.main.drawImage();
 				window.main.drawRightImage();
 				window.main.hideStats();
-				window.main.wait(window.main);
+				window.main.wait(window.main.myself) ;
 				window.main.removeButtons();
 				window.main.addButton("btnContinuePlayer","CONTINUE");
 			break;
@@ -744,7 +784,7 @@ class Main{
 				window.main.drawLeftImage();
 				window.main.drawRightImage();
 				window.main.hideStats();
-				var r=window.main.attack(window.main,window.main.target);
+				var r=window.main.attack(window.main.myself,window.main.myself.target);
 				if(r)window.main.drawImage("rsc/default_enemy_hit.gif");
 				else window.main.drawImage("rsc/default_fail.gif");
 				window.main.removeButtons();
@@ -757,7 +797,7 @@ class Main{
 				window.main.drawImage();
 				window.main.drawRightImage();
 				window.main.hideStats();
-				window.main.baitAttack(window.main);
+				window.main.baitAttack(window.main.myself);
 				window.main.removeButtons();
 				window.main.addButton("btnContinuePlayer","CONTINUE");
 			break;
@@ -768,7 +808,7 @@ class Main{
 				window.main.drawImage();
 				window.main.drawRightImage();
 				window.main.hideStats();
-				window.main.flank(window.main,window.main.enemy);
+				window.main.flank(window.main.myself,window.main.enemy);
 				window.main.removeButtons();
 				window.main.addButton("btnContinuePlayer","CONTINUE");
 			break;
@@ -779,25 +819,20 @@ class Main{
 				window.main.drawImage();
 				window.main.drawRightImage();
 				window.main.hideStats();
-				if(window.main.target==window.main.enemy)window.main.changeFocus(window.main,window.main.enemy2);
-				else window.main.changeFocus(window.main,window.main.enemy);
+				if(window.main.myself.target ==window.main.enemy)window.main.changeFocus(window.main.myself,window.main.enemy2);
+				else window.main.changeFocus(window.main.myself,window.main.enemy);
 				window.main.removeButtons();
 				window.main.addButton("btnContinuePlayer","CONTINUE");
 			break;
 			case "btnNevermind":
 				document.getElementById("mainImg").style.width="32%";
 			case "btnContinueEnemy":
-				if(!window.main.partner.wounded)window.main.drawLeftImage("rsc/partner_back.gif");
-				else window.main.drawLeftImage();
-				if(!window.main.enemy.wounded)window.main.drawImage("rsc/default_enemy_idle.gif");
-				else window.main.drawImage();
-				if(!window.main.enemy2.wounded)window.main.drawRightImage("rsc/default_enemy_idle.gif");
-				else window.main.drawRightImage();
+				window.main.drawBattleScene(window.main.switchedPartner);
 				document.getElementById("mainImg").style.width="32%";
 				window.main.writeStats();
 				window.main.removeButtons();
 				if(end!=true && fled==false){
-					if(window.main.wounded){
+					if(window.main.myself.wounded){
 						window.main.drawLeftImage();
 						window.main.drawImage();
 						window.main.drawRightImage();
@@ -823,7 +858,7 @@ class Main{
 				}
 			break;
 			case "btnFlee":
-				window.main.flee(window.main,window.main.partner);
+				window.main.flee(window.main.myself,window.main.partner);
 			break;
 			case "btnLook":
 				window.main.drawLeftImage();
@@ -846,8 +881,8 @@ class Main{
 			case "btnOrderAttack":
 				window.main.removeButtons();
 				window.main.addOrder(window.main.partner,function atk(){
-					var r=window.main.attack(this,window.main.enemy);
-					if(r)window.main.drawImage("rsc/partner_attack_ok.gif");
+					var r=window.main.attack(this.myself,window.main.enemy);
+					if(r)window.main.drawImage("rsc/partner_attack_ok.gif",window.main.switchedPartner);
 					else window.main.drawImage("rsc/default_fail.gif");});
 				window.main.write(window.main.partner.name+" will attack the enemy next turn");
 				window.main.drawPartnerImage();
@@ -855,7 +890,7 @@ class Main{
 			break;
 			case "btnOrderWait":
 				window.main.removeButtons();
-				window.main.addOrder(window.main.partner,function wt(){window.main.wait(this);window.main.drawPartnerImage();});
+				window.main.addOrder(window.main.partner,function wt(){window.main.wait(this.myself) ;window.main.drawPartnerImage();});
 				window.main.write(window.main.partner.name+" will wait in the next turn");
 				window.main.drawPartnerImage();
 				window.main.addButton("btnNevermind","CONTINUE");
@@ -865,9 +900,9 @@ class Main{
 				if(window.main.partner.bait_count<1){
 					window.main.write("<span class='blue'> i can't do that!</span>");
 					window.main.addButton("btnLook","NEVERMIND");
-					window.main.drawImage("rsc/partner_denied.gif");
+					window.main.drawImage("rsc/partner_denied.gif",window.main.switchedPartner);
 				}else {
-					window.main.addOrder(window.main.partner,function wt(){window.main.baitAttack(this);window.main.drawPartnerImage();});
+					window.main.addOrder(window.main.partner,function wt(){window.main.baitAttack(this.myself);window.main.drawPartnerImage();});
 					window.main.write(window.main.partner.name+" will bait in the next turn");
 					window.main.drawPartnerImage();
 					window.main.addButton("btnNevermind","CONTINUE");
@@ -878,9 +913,9 @@ class Main{
 				if(window.main.partner.bait_count<1){
 					window.main.write("<span class='blue'> i can't do that!</span>");
 					window.main.addButton("btnLook","NEVERMIND");
-					window.main.drawImage("rsc/partner_denied.gif");
+					window.main.drawImage("rsc/partner_denied.gif",window.main.switchedPartner);
 				}else {
-					window.main.addOrder(window.main.partner,function df(){window.main.defendAlly(this,window.main);window.main.drawPartnerImage();});
+					window.main.addOrder(window.main.partner,function df(){window.main.defendAlly(this,window.main.myself) ;window.main.drawPartnerImage();});
 					window.main.write(window.main.partner.name+" will defend you the next turn");
 					window.main.drawPartnerImage();
 					window.main.addButton("btnNevermind","CONTINUE");
@@ -891,7 +926,7 @@ class Main{
 				if(window.main.partner.threat<3){
 					window.main.write("<span class='blue'> i can't do that!</span>");
 					window.main.addButton("btnLook","NEVERMIND");
-					window.main.drawImage("rsc/partner_denied.gif");
+					window.main.drawImage("rsc/partner_denied.gif",window.main.switchedPartner);
 				}else {
 					window.main.addOrder(window.main.partner,function fl(){window.main.flank(this,window.main.enemy);window.main.drawPartnerImage();});
 					window.main.write(window.main.partner.name+" will flank the enemy next turn");
@@ -912,41 +947,71 @@ class Main{
 				window.main.write("spend 1 bait to defend "+window.main.partner.name+" from the next attack");
 				window.main.addButton("btnDefend","DEFEND");
 				window.main.addButton("btnLook","NEVERMIND");
-				if(window.main.bait_count>0)window.main.enableButton("btnDefend");
+				if(window.main.myself.bait_count>0)window.main.enableButton("btnDefend");
 				else window.main.disableButton("btnDefend");
 			break;
 			case "btnDefend":
 				window.main.hideStats();
-				window.main.drawImage("rsc/partner_looking.gif");
-				window.main.defendAlly(window.main,window.main.partner);
+				window.main.drawImage("rsc/partner_looking.gif",window.main.switchedPartner);
+				window.main.defendAlly(window.main.myself,window.main.partner);
 				window.main.removeButtons();
 				window.main.addButton("btnContinuePlayer","CONTINUE");
 			break;
 			case "btnEncourage":
 				window.main.hideStats();
-				window.main.drawImage("rsc/partner_looking.gif");
-				window.main.encourage(window.main,window.main.partner);
+				window.main.drawImage("rsc/partner_looking.gif",window.main.switchedPartner);
+				window.main.encourage(window.main.myself,window.main.partner);
 				window.main.removeButtons();
 				window.main.addButton("btnContinuePlayer","CONTINUE");
 			break;
 			case "btnWaitRest":
-				window.main.drawImage("rsc/partner_looking.gif");
+				window.main.drawImage("rsc/partner_looking.gif",window.main.switchedPartner);
 				window.main.write("<span class='blue'>are you ready to fight?</span>");
 				window.main.removeButtons();
-				window.main.addButton("btnResetFight","YES");
+				window.main.addButton("btnResetFight","YES <span class='WHITE'>LET'S GO</span>");
 			break;
 			case "btnRest":
-				window.main.drawImage("rsc/partner_looking.gif");
+				window.main.drawImage("rsc/partner_looking.gif",window.main.switchedPartner);
 				window.main.write("<span class='blue'>i am ready to fight<br>let's go</span>");
 				window.main.removeButtons();
 				window.main.addButton("btnResetFight","LET'S GO");
 			break;
 			case "btnResetFight":
+				window.main.camping=false;
 				window.main.removeButtons();
 				window.main.resetBattle();
 			break;
-			case "BtnVictory":
-			case "BtnDefeat":
+			case "btnCamp":
+				window.main.camping=true;
+				window.main.saveData();
+				if(window.main.switchedPartner){
+					window.main.drawImage("rsc/camping_partner_02.gif");
+				}else window.main.drawImage("rsc/camping_partner_01.gif");
+				window.main.removeButtons();
+				window.main.addButton("btnCamp","GIVE ORDER <span class='WHITE'>ATTACK</span>");
+				window.main.addButton("btnDescriptionRest","LET'S TAKE A <span class='WHITE'>NAP</span>");
+			break;
+			case "btnDescriptionRest":
+				window.main.removeButtons();
+				window.main.write("take some time to sleep and regain all lost stamina");
+				window.main.write("before going to the next fight");
+				window.main.addButton("btnRestGrowth","SLEEP");
+				window.main.addButton("btnCamp","BACK");
+			break;
+			case "btnRestGrowth":
+				var limboCharacter=window.main.myself;
+				window.main.myself=window.main.partner;
+				window.main.partner=limboCharacter;
+				window.main.switchedPartner=!window.main.switchedPartner;
+				window.main.removeButtons();
+				window.main.drawImage("rsc/swapp.gif");
+				window.main.write("by the link that you share you have switched mind and bodies");
+				window.main.write("you are now your partner and your partner is now you");
+				window.main.addButton("btnRest","NOW I'M <span class='WHITE'>"+window.main.myself.name+"</span>");
+				break;
+			case "bntVictory":
+			case "bntDefeat":
+				window.main.resetSaveData();
 				window.main.removeButtons();
 				window.init();
 			break;
