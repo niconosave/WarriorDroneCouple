@@ -34,8 +34,8 @@ class Main{
 		if(Math.random()>0.45)this.think=this.enemyLogicA;
 		else this.think=this.enemyLogicB;
 		this.turn=1;
-		var leftString=this.switchedPartner ? "rsc/partner_back.gif" : "rsc/default_enemy_idle.gif";
-		var rightString=this.switchedPartner ? "rsc/default_enemy_idle.gif" : "rsc/partner_back.gif";
+		var leftString=this.switchedPartner ? "rsc/default_enemy_idle.gif" : "rsc/partner_back.gif";
+		var rightString=this.switchedPartner ? "rsc/partner_back.gif" : "rsc/default_enemy_idle.gif";
 		this.drawLeftImage(leftString);
 		this.drawImage("rsc/default_enemy_idle.gif");
 		this.drawRightImage(rightString);
@@ -402,9 +402,9 @@ class Main{
 	
 	drawImage(imageName,flipped){
 		if(flipped){
-			this.drawRightImage(imageName);
-			this.drawImage("");
-		}else if(imageName==undefined){
+			document.getElementById("mainImg").classList.add("flipped");
+		}else document.getElementById("mainImg").classList.remove("flipped");;
+		if(imageName==undefined){
 			document.getElementById("mainImg").style.display='none';
 		}else{
 			document.getElementById("mainImg").style.display='initial';
@@ -441,16 +441,16 @@ class Main{
 	}
 
 	drawBattleScene(){
-		var leftString=window.main.switchedPartner ? "rsc/partner_back.gif" : "rsc/default_enemy_idle.gif";
-		var rightString=window.main.switchedPartner ? "rsc/default_enemy_idle.gif" : "rsc/partner_back.gif";
-		var leftWound=window.main.switchedPartner ? window.main.partner.wounded : window.main.enemy2.wounded;
-		var RightWound=window.main.switchedPartner ? window.main.enemy2.wounded : window.main.partner.wounded;
-		if(!leftWound)window.main.drawLeftImage(leftString);
-		else window.main.drawLeftImage();
-		if(!window.main.enemy.wounded)window.main.drawImage("rsc/default_enemy_idle.gif");
-		else window.main.drawImage();
-		if(!RightWound)window.main.drawRightImage(rightString);
-		else window.main.drawRightImage();
+		var leftString=this.switchedPartner ? "rsc/default_enemy_idle.gif" : "rsc/partner_back.gif";
+		var rightString=this.switchedPartner ? "rsc/partner_back.gif" : "rsc/default_enemy_idle.gif";
+		var leftWound=this.switchedPartner ? this.enemy2.wounded : this.partner.wounded;
+		var RightWound=this.switchedPartner ? this.partner.wounded : this.enemy2.wounded;
+		if(!leftWound)this.drawLeftImage(leftString);
+		else this.drawLeftImage();
+		if(!this.enemy.wounded)this.drawImage("rsc/default_enemy_idle.gif");
+		else this.drawImage();
+		if(!RightWound)this.drawRightImage(rightString);
+		else this.drawRightImage();
 	}
 	
 	preLoadImage(imageName){
