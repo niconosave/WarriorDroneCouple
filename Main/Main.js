@@ -703,7 +703,8 @@ class Main{
 		this.addButton("btnBaitDescription","BAIT AN ATTACK");
 		this.addButton("btnFlankDescription","FLANK");
 		this.addButton("btnChangeFocusDescription","CHANGE FOCUS");
-		this.addButton("btnLook","LOOK AT PARTNER");		
+		if(this.partner.wounded) this.addButton("btnFlee","TAKE PARTNER AND FLEE");
+		else this.addButton("btnLook","LOOK AT PARTNER");
 		this.writeStats();
 	}
 	
@@ -838,13 +839,7 @@ class Main{
 						window.main.drawRightImage();
 						window.main.addButton("btnContinuePlayer","YOU ARE TOO HURT TO FIGHT");
 					}else{
-						window.main.addButton("btnWaitDescription","WAIT A MOMENT");
-						window.main.addButton("btnAttackDescription","ATTACK");
-						window.main.addButton("btnBaitDescription","BAIT AN ATTACK");
-						window.main.addButton("btnFlankDescription","FLANK");
-						window.main.addButton("btnChangeFocusDescription","CHANGE FOCUS");
-						if(window.main.partner.wounded) window.main.addButton("btnFlee","TAKE PARTNER AND FLEE");
-						else window.main.addButton("btnLook","LOOK AT PARTNER");
+						window.main.addMainBattleButtons.call(window.main);
 						window.main.addButton("btnRestart","RESTART");
 					}
 				}
