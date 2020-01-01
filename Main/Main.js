@@ -6,7 +6,7 @@ class Main{
 			this.setNamePlayer(localStorage.playerName);
 			this.setNamePartner(localStorage.partnerName);
 			this.init();
-			this.campaignProgress=localStorage.campaignProgress;
+			this.campaignProgress=Number(localStorage.campaignProgress);
 			this.switchedPartner=localStorage.switchedPartner=="true";
 			this.camping=localStorage.camping=="true";
 			this.resetBattle();
@@ -20,8 +20,8 @@ class Main{
 		this.switchedPartner=false;
 		this.camping=false;
 		this.campaignGoal=10;
-		this.enemy=this.createCharacter("enemy",1);
-		this.enemy2=this.createCharacter("enemy2",1);
+		this.enemy=this.createCharacter("enemy",4);
+		this.enemy2=this.createCharacter("enemy2",4);
 		this.partner=this.createCharacter(this.partnerName,10);
 		this.myself=this.createCharacter(this.name,10);
 		this.partner.order=null;
@@ -35,6 +35,7 @@ class Main{
 		else this.think=this.enemyLogicB;
 		this.turn=1;
 		this.chooseEnemyAction();
+		this.updateEnemyFaces(this.enemy,this.enemy2,this.campaignProgress);
 		var leftString=this.switchedPartner ? this.enemy2.getIdleImageURL() : "rsc/partner_back.gif";
 		var rightString=this.switchedPartner ? "rsc/partner_back.gif" : this.enemy2.getIdleImageURL();
 		this.drawLeftImage(leftString);
@@ -47,8 +48,8 @@ class Main{
 	resetBattle(){
 		fled=false;
 		end=false;
-		this.enemy=this.createCharacter("enemy",1);
-		this.enemy2=this.createCharacter("enemy2",1);
+		this.enemy=this.createCharacter("enemy",4+this.campaignProgress*2);
+		this.enemy2=this.createCharacter("enemy2",4+this.campaignProgress*2);
 		this.partner.stamina=this.partner.stamina_max;
 		this.partner.defended=false;
 		this.partner.wounded=false;
@@ -83,10 +84,12 @@ class Main{
 			this.drawRightImage();
 			this.addButton("btnCamp","START");
 		}else {
+			this.updateEnemyFaces(this.enemy,this.enemy2,this.campaignProgress);
 			this.drawBattleScene();
 			this.addMainBattleButtons();
 			this.addButton("btnRestart","RESTART");
 		}
+		this.saveData();
 	}
 
 	
@@ -99,7 +102,7 @@ class Main{
 		this.partnerName=name;
 	}
 	
-	createCharacter(name,stamina){
+	createCharacter(name,stamina,faces){
 		var character=new Object();
 		character.threat=1;
 		character.stamina=stamina;
@@ -111,10 +114,10 @@ class Main{
 		character.flanker=null;
 		character.name=name;
 		character.action=null;
+		character.faces=faces;
 		character.getIdleImageURL=function(){
-			var name=this.action.name;
-			if(name=="PASS_TURN" || name=="WAIT" || name=="FLANK" || name=="CHANGE_TARGET") name="";
-			return "rsc/default_enemy_idle"+name+".gif"
+			var name=this.faces[this.action.name]!="undefined" ? this.faces[this.action.name] : this.faces["default"];
+			return "rsc/default_enemy_idle"+name+".gif";
 		}
 		return character;
 	}
@@ -223,6 +226,64 @@ class Main{
 	chooseEnemyAction(){
 		this.enemy.action=this.think(this.enemy);
 		this.enemy2.action=this.think(this.enemy2);
+	}
+
+	updateEnemyFaces(enemy,enemy2,progress){
+		switch(progress){
+			default:
+			case 0:
+			enemy.faces={"WAIT":"","ATTACK":"_murder","BAIT":"_demon","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			enemy2.faces={"WAIT":"","ATTACK":"_murder","BAIT":"_demon","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			break;
+			case 1:
+			enemy.faces={"WAIT":"","ATTACK":"_murder","BAIT":"_demon","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			enemy2.faces={"WAIT":"_confused","ATTACK":"_demon","BAIT":"_murder","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			break;
+			case 2:
+			enemy.faces={"WAIT":"_offended","ATTACK":"_murder","BAIT":"_mad","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			enemy2.faces={"WAIT":"_mad","ATTACK":"_demon","BAIT":"_murder","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			break;
+			case 2:
+			enemy.faces={"WAIT":"","ATTACK":"_mad","BAIT":"_murder","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			enemy2.faces={"WAIT":"_dumb","ATTACK":"_murder","BAIT":"_demon","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			break;
+			case 3:
+			enemy.faces={"WAIT":"_shades","ATTACK":"_serious","BAIT":"_dumb","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			enemy2.faces={"WAIT":"","ATTACK":"_murder","BAIT":"_distracted","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			break;
+			case 4:
+			enemy.faces={"WAIT":"","ATTACK":"_dumb","BAIT":"_dumb","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			enemy2.faces={"WAIT":"_contradiction","ATTACK":"_contradiction","BAIT":"_contradiction","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			break;
+			case 5:
+			enemy.faces={"WAIT":this.getRandomFace(),"ATTACK":"_offended","BAIT":"_dumb","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			enemy2.faces={"WAIT":"","ATTACK":"_offended","BAIT":"_murder","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			break;
+			case 6:
+			enemy.faces={"WAIT":"_serious","ATTACK":"_serious","BAIT":"_serious","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			enemy2.faces={"WAIT":"","ATTACK":this.getRandomFace(),"BAIT":this.getRandomFace(),"CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			break;
+			case 7:
+			enemy.faces={"WAIT":this.getRandomFace(),"ATTACK":this.getRandomFace(),"BAIT":"_murder","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			enemy2.faces={"WAIT":this.getRandomFace(),"ATTACK":this.getRandomFace(),"BAIT":"_murder","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			break;
+			case 8:
+			enemy.faces={"WAIT":this.getRandomFace(),"ATTACK":this.getRandomFace(),"BAIT":this.getRandomFace(),"CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			enemy2.faces={"WAIT":this.getRandomFace(),"ATTACK":this.getRandomFace(),"BAIT":this.getRandomFace(),"CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			break;
+			case 9:
+			enemy.faces={"WAIT":"_nothing","ATTACK":"_nothing","BAIT":"_nothing","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			enemy2.faces={"WAIT":"_nothing","ATTACK":"_nothing","BAIT":"_nothing","CHANGE_TARGET":"","PASS_TURN":"","FLANK":"","default":""};
+			break;
+		}
+	}
+
+	getRandomFace(){
+		var random = Math.random()*10;
+		if(random <1)return "_confused"; else if(random <2)return "_contradiction"; else if(random <3)return "_serious";
+		else if(random <4)return "_demon"; else if(random <5)return "_dumb"; else if(random <6)return "_murder"; 
+		else if(random <7)return "_mad"; else if(random <8)return "_shades"; else if(random <9)return "_distracted";
+		else return "_offended";
 	}
 	
 	enemyLogicA(who){
