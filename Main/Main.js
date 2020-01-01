@@ -34,10 +34,11 @@ class Main{
 		if(Math.random()>0.45)this.think=this.enemyLogicA;
 		else this.think=this.enemyLogicB;
 		this.turn=1;
-		var leftString=this.switchedPartner ? "rsc/default_enemy_idle.gif" : "rsc/partner_back.gif";
-		var rightString=this.switchedPartner ? "rsc/partner_back.gif" : "rsc/default_enemy_idle.gif";
+		this.chooseEnemyAction();
+		var leftString=this.switchedPartner ? this.enemy2.getIdleImageURL() : "rsc/partner_back.gif";
+		var rightString=this.switchedPartner ? "rsc/partner_back.gif" : this.enemy2.getIdleImageURL();
 		this.drawLeftImage(leftString);
-		this.drawImage("rsc/default_enemy_idle.gif");
+		this.drawImage(this.enemy.getIdleImageURL());
 		this.drawRightImage(rightString);
 		this.addMainBattleButtons();
 		window.onkeypress = this.keyPress;
@@ -70,6 +71,7 @@ class Main{
 		this.queueIndex=0;
 		if(Math.random()>0.45)this.think=this.enemyLogicA;
 		else this.think=this.enemyLogicB;
+		this.chooseEnemyAction();
 		document.getElementById("mainImg").style.width="32%";
 		this.turn=1;
 		this.hideDangerText();
@@ -108,6 +110,12 @@ class Main{
 		character.bait_count=0;
 		character.flanker=null;
 		character.name=name;
+		character.action=null;
+		character.getIdleImageURL=function(){
+			var name=this.action.name;
+			if(name=="PASS_TURN" || name=="WAIT" || name=="FLANK" || name=="CHANGE_TARGET") name="";
+			return "rsc/default_enemy_idle"+name+".gif"
+		}
 		return character;
 	}
 	
@@ -148,7 +156,7 @@ class Main{
 		if(!this.checkVictory()){
 			switch(this.queueIndex){
 				case 0:
-					this.think(this.enemy);
+					this.enemy.action.function();
 					if(this.myself.adrenaline)this.setPanicText();
 					else if(this.myself.stamina<4)this.setDangerText();
 					else this.hideDangerText();
@@ -169,7 +177,7 @@ class Main{
 					return false;
 				break;
 				case 2:
-					this.think(this.enemy2);
+					this.enemy2.action.function();
 					if(this.myself.adrenaline)this.setPanicText();
 					else if(this.myself.stamina<4)this.setDangerText();
 					else this.hideDangerText();
@@ -211,74 +219,133 @@ class Main{
 			}
 		}
 	}
+
+	chooseEnemyAction(){
+		this.enemy.action=this.think(this.enemy);
+		this.enemy2.action=this.think(this.enemy2);
+	}
 	
 	enemyLogicA(who){
 		if(who.wounded){
-			this.write(who.name+" is too hurt to fight!")
+			return {"name":"PASS_TURN",
+					"function": function (){
+						window.main.write(who.name+" is too hurt to fight!")
+					}};
 		}else if(who.target.wounded){
-			this.changeFocus(who);
+			return {"name":"CHANGE_TARGET",
+					"function": function (){
+						window.main.changeFocus(who);
+					}};
 		}else if(who.flanker==who.target && who.sideTarget.threat>2){
 			if(enemy.stamina<1){
-				var r=this.attack(who,enemy);
-				if(r)this.drawImage("rsc/default_enemy_attack_ok.gif");
-				else this.drawImage("rsc/default_enemy_attack_fail.gif");
+				return {"name":"ATTACK",
+						"function": function (){
+							var r=window.main.attack(who,enemy);
+							if(r)window.main.drawImage("rsc/default_enemy_attack_ok.gif");
+							else window.main.drawImage("rsc/default_enemy_attack_fail.gif");
+					}};
 			}else {
-				this.drawImage("rsc/default_enemy_idle.gif");
-				this.flank(who,enemy);
+				return {"name":"FLANK",
+						"function": function (){
+							window.main.drawImage("rsc/default_enemy_idle.gif");
+							window.main.flank(who,enemy);
+				}}
 			}
 		}else if(who.flanker==who.sideTarget && who.target.target!=who){
 			if(enemy.stamina<1){
-				var r=this.attack(who,enemy);
-				if(r)this.drawImage("rsc/default_enemy_attack_ok.gif");
-				else this.drawImage("rsc/default_enemy_attack_fail.gif");
+				return {"name":"ATTACK",
+						"function": function (){
+							var r=window.main.attack(who,enemy);
+							if(r)window.main.drawImage("rsc/default_enemy_attack_ok.gif");
+							else window.main.drawImage("rsc/default_enemy_attack_fail.gif");
+						}};
 			}else {
-				this.changeFocus(who);
+				return {"name":"CHANGE_TARGET",
+				 "function": function (){
+					window.main.changeFocus(who);
+				}};
 			}
 		}else if(who.bait_count>0 && Math.random()<0.2*Math.max(who.target.threat,who.sideTarget.threat)){
-			this.drawImage("rsc/default_enemy_idle.gif");
-			this.baitAttack(who);
+			return {"name":"BAIT",
+			 		"function": function (){
+						window.main.drawImage("rsc/default_enemy_idle.gif");
+						window.main.baitAttack(who);
+					}};
 		}else if(this.turn%2==0){
-			var r=this.attack(who,who.target);
-			if(r)this.drawImage("rsc/default_enemy_attack_ok.gif");
-			else this.drawImage("rsc/default_enemy_attack_fail.gif");
+			return {"name":"ATTACK",
+			 "function": function (){
+				var r=window.main.attack(who,who.target);
+				if(r)window.main.drawImage("rsc/default_enemy_attack_ok.gif");
+				else window.main.drawImage("rsc/default_enemy_attack_fail.gif");
+			}};
 		}else {
-			this.wait(who);
-			this.drawImage("rsc/default_enemy_idle.gif");
+			return {"name":"WAIT",
+					"function": function (){
+						window.main.wait(who);
+						window.main.drawImage("rsc/default_enemy_idle.gif");
+					}};
 		}
 	}
 	
 	enemyLogicB(who){
 		if(who.wounded){
-			this.write(who.name+" is too hurt to fight!")
+			return {"name":"PASS_TURN",
+					"function": function (){
+						window.main.write(who.name+" is too hurt to fight!");
+					}};
 		}else if(who.target.wounded){
-			this.changeFocus(who);
+			return {"name":"CHANGE_TARGET",
+					"function": function (){
+						window.main.changeFocus(who);
+					}};
 		}else if(who.flanker==who.target && who.sideTarget.threat>2){
 			if(enemy.stamina<1){
-				var r=this.attack(who,enemy);
-				if(r)this.drawImage("rsc/default_enemy_attack_ok.gif");
-				else this.drawImage("rsc/default_enemy_attack_fail.gif");
+				return {"name":"ATTACK",
+			 			"function": function (){
+						 	var r=window.main.attack(who,enemy);
+							if(r)window.main.drawImage("rsc/default_enemy_attack_ok.gif");
+							else window.main.drawImage("rsc/default_enemy_attack_fail.gif");
+						}};
 			}else {
-				this.drawImage("rsc/default_enemy_idle.gif");
-				this.flank(who,enemy);
+				return {"name":"FLANK",
+						"function": function (){
+							window.main.drawImage("rsc/default_enemy_idle.gif");
+							window.main.flank(who,enemy);
+						}};
 			}
 		}else if(who.flanker==who.sideTarget && who.target.target!=who){
 			if(enemy.stamina<1){
-				var r=this.attack(who,enemy);
-				if(r)this.drawImage("rsc/default_enemy_attack_ok.gif");
-				else this.drawImage("rsc/default_enemy_attack_fail.gif");
+				return {"name":"ATTACK",
+			 			"function": function (){
+						 	var r=window.main.attack(who,enemy);
+							if(r)window.main.drawImage("rsc/default_enemy_attack_ok.gif");
+							else window.main.drawImage("rsc/default_enemy_attack_fail.gif");
+						}};
 			}else {
-				this.changeFocus(who);
+				return {"name":"CHANGE_TARGET",
+						"function": function (){
+							window.main.changeFocus(who);
+						}};
 			}
 		}else if(who.bait_count>0 && Math.random()<0.2*Math.max(who.target.threat,who.sideTarget.threat)){
-			this.drawImage("rsc/default_enemy_idle.gif");
-			this.baitAttack(who);
+			return {"name":"BAIT",
+			 		"function": function (){
+			 			window.main.drawImage("rsc/default_enemy_idle.gif");
+						window.main.baitAttack(who);
+					}};
 		}else if(this.turn%3==0){
-			var r=this.attack(who,who.target);
-			if(r)this.drawImage("rsc/default_enemy_attack_ok.gif");
-			else this.drawImage("rsc/default_enemy_attack_fail.gif");
+			return {"name":"ATTACK",
+					"function": function (){
+					 	var r=window.main.attack(who,who.target);
+						if(r)window.main.drawImage("rsc/default_enemy_attack_ok.gif");
+						else window.main.drawImage("rsc/default_enemy_attack_fail.gif");
+					}};
 		}else {
-			this.wait(who);
-			this.drawImage("rsc/default_enemy_idle.gif");
+			return {"name":"WAIT",
+					"function": function (){
+						window.main.wait(who);
+						window.main.drawImage("rsc/default_enemy_idle.gif");
+					}};
 		}
 	}
 	
@@ -441,13 +508,13 @@ class Main{
 	}
 
 	drawBattleScene(){
-		var leftString=this.switchedPartner ? "rsc/default_enemy_idle.gif" : "rsc/partner_back.gif";
-		var rightString=this.switchedPartner ? "rsc/partner_back.gif" : "rsc/default_enemy_idle.gif";
+		var leftString=this.switchedPartner ? this.enemy2.getIdleImageURL() : "rsc/partner_back.gif";
+		var rightString=this.switchedPartner ? "rsc/partner_back.gif" : this.enemy2.getIdleImageURL();
 		var leftWound=this.switchedPartner ? this.enemy2.wounded : this.partner.wounded;
 		var RightWound=this.switchedPartner ? this.partner.wounded : this.enemy2.wounded;
 		if(!leftWound)this.drawLeftImage(leftString);
 		else this.drawLeftImage();
-		if(!this.enemy.wounded)this.drawImage("rsc/default_enemy_idle.gif");
+		if(!this.enemy.wounded)this.drawImage(this.enemy.getIdleImageURL());
 		else this.drawImage();
 		if(!RightWound)this.drawRightImage(rightString);
 		else this.drawRightImage();
@@ -832,6 +899,7 @@ class Main{
 				document.getElementById("mainImg").style.width="32%";
 				window.main.writeStats();
 				window.main.removeButtons();
+				window.main.chooseEnemyAction();
 				if(end!=true && fled==false){
 					if(window.main.myself.wounded){
 						window.main.drawLeftImage();
