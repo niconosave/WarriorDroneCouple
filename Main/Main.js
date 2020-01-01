@@ -111,6 +111,7 @@ class Main{
 		character.defended=false;
 		character.bait=false;
 		character.bait_count=0;
+		character.love=character.coordination=character.control=0;
 		character.flanker=null;
 		character.name=name;
 		character.action=null;
@@ -131,7 +132,13 @@ class Main{
 		if (typeof(Storage) !== "undefined") {
 			localStorage.setItem("firstTime", 0);
 			localStorage.setItem("playerName", this.myself.name);
+			localStorage.setItem("playerLove", this.myself.love);
+			localStorage.setItem("playerCoordination", this.myself.coordination);
+			localStorage.setItem("playerControl", this.myself.control);
 			localStorage.setItem("partnerName", this.partner.name);
+			localStorage.setItem("partnerLove", this.partner.love);
+			localStorage.setItem("partnerCoordination", this.partner.coordination);
+			localStorage.setItem("partnerControl", this.partner.control);
 			localStorage.setItem("campaignProgress", this.campaignProgress);
 			localStorage.setItem("switchedPartner", this.switchedPartner);
 			localStorage.setItem("camping", this.camping);
@@ -143,6 +150,13 @@ class Main{
 			localStorage.removeItem("firstTime");
 			localStorage.removeItem("playerName");
 			localStorage.removeItem("partnerName");
+			localStorage.removeItem("playerLove");
+			localStorage.removeItem("playerCoordination");
+			localStorage.removeItem("playerControl");
+			localStorage.removeItem("partnerName");
+			localStorage.removeItem("partnerLove");
+			localStorage.removeItem("partnerCoordination");
+			localStorage.removeItem("partnerControl");
 			localStorage.removeItem("campaignProgress");
 			localStorage.removeItem("switchedPartner");
 			localStorage.removeItem("camping");
@@ -829,11 +843,15 @@ class Main{
 		this.addButton("btnWaitDescription","WAIT A MOMENT");
 		this.addButton("btnAttackDescription","ATTACK");
 		this.addButton("btnBaitDescription","BAIT AN ATTACK");
-		this.addButton("btnFlankDescription","FLANK");
+		if(this.myself.coordination>2)this.addButton("btnFlankDescription","FLANK");
 		this.addButton("btnChangeFocusDescription","CHANGE FOCUS");
 		if(this.partner.wounded) this.addButton("btnFlee","TAKE PARTNER AND FLEE");
 		else this.addButton("btnLook","LOOK AT PARTNER");
 		this.writeStats();
+	}
+	
+	addLookAtPartnerButtons(){
+		
 	}
 	
 	buttonClick(e){
@@ -993,13 +1011,20 @@ class Main{
 				window.main.removeButtons();
 				if(isMobile())document.getElementById("mainImg").style.width="60%";
 				else document.getElementById("mainImg").style.width="40%";
-				window.main.addButton("btnOrderAttack","GIVE ORDER <span class='WHITE'>ATTACK</span>");
-				window.main.addButton("btnOrderWait","GIVE ORDER <span class='WHITE'>WAIT</span>");
-				window.main.addButton("btnOrderBait","GIVE ORDER <span class='WHITE'>BAIT</span>");
-				window.main.addButton("btnOrderDefendMe","GIVE ORDER <span class='WHITE'>DEFEND ME</span>");
-				window.main.addButton("btnOrderFlank","GIVE ORDER <span class='WHITE'>FLANK</span>");
-				window.main.addButton("btnDefendDescription","DEFEND");
-				window.main.addButton("btnEncourageDescription","ENCOURAGE");
+				if(window.main.myself.control>1)
+					window.main.addButton("btnOrderAttack","GIVE ORDER <span class='WHITE'>ATTACK</span>");
+				if(window.main.myself.control>0)
+					window.main.addButton("btnOrderWait","GIVE ORDER <span class='WHITE'>WAIT</span>");
+				if(window.main.myself.control>2)
+					window.main.addButton("btnOrderBait","GIVE ORDER <span class='WHITE'>BAIT</span>");
+				if(window.main.myself.control>3)
+					window.main.addButton("btnOrderDefendMe","GIVE ORDER <span class='WHITE'>DEFEND ME</span>");
+				if(window.main.partner.coordination>2)
+					window.main.addButton("btnOrderFlank","GIVE ORDER <span class='WHITE'>FLANK</span>");
+				if(window.main.myself.love>3)
+					window.main.addButton("btnDefendDescription","DEFEND");
+				if(window.main.myself.love>1)
+					window.main.addButton("btnEncourageDescription","ENCOURAGE");
 				window.main.addButton("btnNevermind","NEVERMIND");
 			break;
 			case "btnOrderAttack":
@@ -1112,7 +1137,7 @@ class Main{
 					window.main.drawImage("rsc/camping_partner_02.gif");
 				}else window.main.drawImage("rsc/camping_partner_01.gif");
 				window.main.removeButtons();
-				window.main.addButton("btnCamp","GIVE ORDER <span class='WHITE'>ATTACK</span>");
+				window.main.addButton("btnCheat","CHEAT");
 				window.main.addButton("btnDescriptionRest","LET'S TAKE A <span class='WHITE'>NAP</span>");
 			break;
 			case "btnDescriptionRest":
@@ -1121,6 +1146,31 @@ class Main{
 				window.main.write("before going to the next fight");
 				window.main.addButton("btnRestGrowth","SLEEP");
 				window.main.addButton("btnCamp","BACK");
+			break;
+			case "btnCheat":
+				window.main.removeButtons();
+				window.main.addButton("btnCheatControl","Order "+window.main.partner.name+" around");
+				window.main.addButton("btnCheatLove","Love "+window.main.partner.name);
+				window.main.addButton("btnCheatTrain","Train with "+window.main.partner.name);
+				window.main.addButton("btnCamp","NEVERMIND");
+			break;
+			case "btnCheatControl":
+				window.main.removeButtons();
+				window.main.myself.control++;
+				window.main.write("you really need to control your partner ("+window.main.myself.control+"/4)");
+				window.main.addButton("btnRestGrowth","SLEEP");
+			break;
+			case "btnCheatLove":
+				window.main.removeButtons();
+				window.main.myself.love++;
+				window.main.write("you have become accustomed to "+window.main.partner.name+" and can't help but to share their sorrow and happiness ("+window.main.myself.love+"/4)");
+				window.main.addButton("btnRestGrowth","SLEEP");
+			break;
+			case "btnCheatTrain":
+				window.main.removeButtons();
+				window.main.myself.coordination++;
+				window.main.write("you train with "+window.main.partner.name+" so that you may find new ways to fight ("+window.main.myself.love+"/3)");
+				window.main.addButton("btnRestGrowth","SLEEP");
 			break;
 			case "btnRestGrowth":
 				var limboCharacter=window.main.myself;
