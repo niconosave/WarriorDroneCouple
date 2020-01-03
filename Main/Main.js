@@ -9,6 +9,12 @@ class Main{
 			this.campaignProgress=Number(localStorage.campaignProgress);
 			this.switchedPartner=localStorage.switchedPartner=="true";
 			this.camping=localStorage.camping=="true";
+			this.myself.love=Number(localStorage.playerLove);
+			this.myself.coordination=Number(localStorage.playerCoordination);
+			this.myself.control=Number(localStorage.playerControl);
+			this.partner.love=Number(localStorage.partnerLove);
+			this.partner.coordination=Number(localStorage.partnerCoordination);
+			this.partner.control=Number(localStorage.partnerControl);
 			this.resetBattle();
 		}
 	}
@@ -1149,9 +1155,9 @@ class Main{
 			break;
 			case "btnCheat":
 				window.main.removeButtons();
-				window.main.addButton("btnCheatControl","Order "+window.main.partner.name+" around");
-				window.main.addButton("btnCheatLove","Love "+window.main.partner.name);
-				window.main.addButton("btnCheatTrain","Train with "+window.main.partner.name);
+				window.main.addButton("btnCheatControl","Order "+window.main.partner.name+" around ("+window.main.myself.control+")");
+				window.main.addButton("btnCheatLove","Love "+window.main.partner.name+"("+window.main.myself.love+")");
+				window.main.addButton("btnCheatTrain","Train with "+window.main.partner.name+"("+window.main.myself.coordination+")");
 				window.main.addButton("btnCamp","NEVERMIND");
 			break;
 			case "btnCheatControl":
